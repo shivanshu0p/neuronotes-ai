@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NeuroNotes AI</title>
+<style>
+:root {
+  --site-primary: #168DCC;
+  --site-secondary: #FF4FA3;
+  --site-background: #050608;
+  --site-on-primary: #FFFFFF;
+  --site-on-secondary: #140811;
+  --site-on-background: #F4F7FB;
+  --site-font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --site-font-heading: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --site-heading-scale: 1;
+  --site-spacing-scale: 1;
+  --site-radius-scale: 1;
+  --site-decoration-opacity: 1;
+  color-scheme: light dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--site-font-body); background: light-dark(#f4f7fb, var(--site-background)); color: light-dark(#101722, var(--site-on-background)); }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+#app { min-height: 100vh; width: 100%; border-radius: 0; background-color: var(--site-background); color: var(--site-on-background); position: relative; overflow: clip; }
+#app::before { content: ""; position: absolute; width: 520px; height: 520px; border-radius: 50%; background: radial-gradient(circle, rgba(22,141,204,.12), transparent 68%); top: -250px; right: -100px; pointer-events: none; opacity: var(--site-decoration-opacity); }
+#app::after { content: ""; position: absolute; width: 440px; height: 440px; border-radius: 50%; background: radial-gradient(circle, rgba(255,79,163,.07), transparent 70%); bottom: -250px; left: 15%; pointer-events: none; opacity: var(--site-decoration-opacity); }
+.layout { display: grid; grid-template-columns: 248px minmax(0,1fr); min-height: 100vh; position: relative; z-index: 1; }
+.sidebar { border-right: 1px solid #1b2531; background: rgba(8,11,16,.94); padding: calc(22px * var(--site-spacing-scale)) 15px; display: flex; flex-direction: column; gap: 26px; position: sticky; top: 0; align-self: start; height: 100vh; height: 100dvh; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.brand { display:flex; align-items:center; gap:11px; padding: 0 9px; }
+.brand-mark { width:38px; height:38px; border-radius:12px; display:grid; place-items:center; background:linear-gradient(135deg,var(--site-primary),#174e87 55%,var(--site-secondary)); box-shadow:0 0 25px rgba(22,141,204,.24); color:white; font-size:19px; font-weight:800; transform:rotate(-5deg); }
+.brand-name { font-weight:800; letter-spacing:-.5px; font-size:16px; }
+.brand-name span { color:var(--site-primary); }
+.brand-sub { font-size:10px; color:#728195; margin-top:3px; letter-spacing:1.8px; text-transform:uppercase; }
+.nav-label { color:#657388; font-size:10px; font-weight:800; letter-spacing:1.7px; padding:0 12px; margin-bottom:8px; }
+.nav-list { display:grid; gap:5px; }
+.nav-item { position:relative; display:flex; align-items:center; gap:12px; border:1px solid transparent; background:transparent; color:#9aa8b9; padding:11px 12px; border-radius:11px; text-align:left; font-size:13px; transition:transform .2s ease,background .2s ease,border-color .2s ease,color .2s ease,box-shadow .2s ease; }
+.nav-item .ico { width:19px; text-align:center; font-size:16px; }
+.nav-item:hover { color:#fff; background:#101b27; border-color:#1d4055; transform:translateX(3px); box-shadow:inset 3px 0 0 var(--site-primary),0 6px 18px #0003; }
+.nav-item.active { color:#fff; background:linear-gradient(100deg,rgba(22,141,204,.2),rgba(22,141,204,.055)); border-color:rgba(22,141,204,.38); box-shadow:inset 3px 0 0 var(--site-primary); }
+.nav-item.active .ico { color:#47c3ff; }
+.nav-count { margin-left:auto; font-size:10px; color:#a8b8c8; background:#1b2633; border-radius:6px; padding:3px 6px; }
+.sidebar-bottom { margin-top:auto; }
+.api-card { border:1px solid #263343; border-radius:14px; padding:14px; background:linear-gradient(145deg,#101924,#0b0e14); }
+.api-dot { width:7px;height:7px;border-radius:50%;display:inline-block;background:#f6b74a;box-shadow:0 0 10px #f6b74a;margin-right:6px; }
+.api-status { font-size:11px;color:#d4dce7; }
+.api-card p { color:#8190a2;font-size:11px;line-height:1.6;margin:10px 0 13px; }
+.small-btn { border:1px solid #2b4355;background:#10202c;color:#cbeeff;border-radius:8px;padding:8px 10px;font-size:11px;width:100%; }
+.profile { display:flex;align-items:center;gap:10px;padding:15px 7px 0;margin-top:15px;border-top:1px solid #1b2531; }
+.avatar { width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#226a9a,#e44e9c);display:grid;place-items:center;font-weight:800;font-size:12px; }
+.profile-name { font-size:12px;font-weight:700; }.profile-sub { font-size:10px;color:#718094;margin-top:3px; }
+.main { min-width:0; padding:28px clamp(18px,3.5vw,48px) 42px; }
+.topbar { display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:32px; }
+.breadcrumb { color:#718095;font-size:12px; }.breadcrumb strong { color:#dfe8f1;font-weight:600; }
+.top-actions { display:flex;align-items:center;gap:10px; }
+.icon-btn { border:1px solid #263341;background:#0d131b;color:#b9c6d5;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;position:relative; }
+.icon-btn:hover { border-color:var(--site-primary);color:white;box-shadow:0 0 15px #168dcc25; }
+.status-pill { border:1px solid #244c61;color:#7bd5ff;background:#0c1b26;padding:8px 11px;border-radius:999px;font-size:10px;letter-spacing:.3px; }
+.page { display:none; animation:fadeUp .35s ease both; }.page.active { display:block; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.eyebrow { display:flex;align-items:center;gap:8px;color:#55c5ff;text-transform:uppercase;letter-spacing:2px;font-size:10px;font-weight:800;margin-bottom:14px; }
+.eyebrow:before { content:"";width:22px;height:1px;background:var(--site-primary); }
+h1,h2,h3,p { margin-top:0; }
+h1 { font-family:var(--site-font-heading);font-size:calc(clamp(31px,4vw,48px) * var(--site-heading-scale));letter-spacing:-2px;line-height:1.08;margin-bottom:13px; }
+h1 .gradient { background:linear-gradient(90deg,#f5f8ff 0%,#75d2ff 45%,#ff72b7 100%);background-clip:text;-webkit-background-clip:text;color:transparent; }
+.lead { color:#8e9db0;line-height:1.7;font-size:13px;max-width:590px;margin-bottom:25px; }
+.hero { display:grid;grid-template-columns:minmax(0,1.35fr) minmax(220px,.65fr);gap:24px;align-items:center;margin-bottom:29px; }
+.hero-art { min-height:210px;position:relative;display:grid;place-items:center;perspective:800px; }
+.orbit { position:absolute;border:1px solid rgba(58,180,241,.25);border-radius:50%;width:195px;height:195px;transform:rotateX(67deg) rotateZ(-20deg);opacity:var(--site-decoration-opacity); }
+.orbit.two { width:240px;height:240px;transform:rotateX(70deg) rotateZ(33deg);border-color:rgba(255,79,163,.23); }
+.orbit.three { width:155px;height:155px;transform:rotateX(68deg) rotateZ(75deg);border-style:dashed; }
+.core { width:100px;height:100px;border-radius:29px;display:grid;place-items:center;background:linear-gradient(145deg,#183e5b,#101a2c 60%,#281429);border:1px solid #3a8cb3;box-shadow:0 0 45px #168dcc28,inset 0 0 25px #168dcc18;transform:rotateX(13deg) rotateY(-15deg) rotateZ(-8deg);font-size:35px;z-index:2; }
+.float-chip { position:absolute;padding:9px 11px;background:rgba(13,21,31,.9);border:1px solid #263e52;border-radius:10px;font-size:10px;color:#d5e7f5;box-shadow:0 12px 30px #0005;backdrop-filter:blur(12px);z-index:3; }
+.float-chip b { color:#5cc9ff; }.chip-a { top:28px;left:4%;transform:rotate(-5deg); }.chip-b { bottom:27px;right:0;transform:rotate(4deg); }.chip-c { top:44px;right:3%;border-color:#61304b; }.chip-c b { color:#ff79b9; }
+.search-panel { display:flex;align-items:center;gap:12px;padding:9px 10px 9px 15px;background:#0b1017;border:1px solid #273544;border-radius:14px;box-shadow:0 15px 35px #0002;max-width:700px;transition:border .2s,box-shadow .2s; }
+.search-panel:focus-within { border-color:var(--site-primary);box-shadow:0 0 0 3px #168dcc20,0 15px 35px #0003; }
+.search-icon { color:#6f8195;font-size:18px; }.search-panel input { flex:1;min-width:0;background:transparent;border:0;outline:0;color:#f5f7fa;font-size:13px; }.search-panel input::placeholder { color:#68778a; }
+.btn { display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:10px;padding:11px 15px;font-weight:700;font-size:12px;transition:transform .2s,box-shadow .2s,background .2s,border-color .2s;color:white; }
+.btn:hover { transform:translateY(-2px); }.btn-primary { background:linear-gradient(110deg,#168dCC,#167bb2);box-shadow:0 7px 22px #168dcc24; }.btn-primary:hover { box-shadow:0 8px 28px #168dcc52; }.btn-rose { background:linear-gradient(110deg,#ff4fa3,#d93885);color:#170811;box-shadow:0 7px 22px #ff4fa320; }.btn-ghost { background:#101821;border-color:#2b3948;color:#c3d0de; }.btn-ghost:hover { border-color:#3d7899;background:#14212d; }.btn:disabled { opacity:.45;cursor:not-allowed;transform:none; }
+.section-head { display:flex;align-items:center;justify-content:space-between;gap:15px;margin:27px 0 15px; }.section-head h2 { font-size:16px;letter-spacing:-.4px;margin:0; }.muted { color:#7e8da0;font-size:11px; }
+.feature-grid { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px; }
+.feature-card { min-height:156px;border:1px solid #222e3b;border-radius:16px;padding:17px;background:linear-gradient(145deg,#0e151e,#090d13);position:relative;overflow:hidden;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;transform-style:preserve-3d; }
+.feature-card::after { content:"";position:absolute;width:130px;height:130px;right:-65px;top:-65px;border-radius:50%;background:radial-gradient(circle,var(--glow,rgba(22,141,204,.15)),transparent 68%);pointer-events:none; }
+.feature-card:hover { border-color:#2c789d;box-shadow:0 16px 32px #0004,0 0 20px #168dcc12; }
+.feature-icon { width:37px;height:37px;display:grid;place-items:center;border-radius:11px;background:#112635;color:#52caff;border:1px solid #1b4055;font-size:18px;margin-bottom:19px;box-shadow:inset 0 0 15px #168dcc0c; }
+.feature-card.rose .feature-icon { color:#ff7bb8;background:#2a1522;border-color:#54253e; }.feature-card.rose { --glow:rgba(255,79,163,.14); }.feature-card h3 { font-size:13px;margin:0 0 7px; }.feature-card p { font-size:10px;line-height:1.6;color:#8493a6;margin:0; }.card-arrow { position:absolute;right:15px;bottom:14px;color:#71869b;font-size:14px; }
+.content-grid { display:grid;grid-template-columns:minmax(0,1.2fr) minmax(240px,.8fr);gap:17px;margin-top:25px; }
+.panel { border:1px solid #222e3b;background:linear-gradient(145deg,rgba(14,20,29,.95),rgba(8,12,18,.96));border-radius:16px;padding:18px;min-width:0; }
+.panel-head { display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px; }.panel-head h3 { font-size:13px;margin:0; }.text-btn { background:transparent;border:0;color:#55c5ff;font-size:11px;padding:4px; }
+.activity-list { display:grid;gap:5px; }.activity-row { display:flex;align-items:center;gap:11px;padding:10px 7px;border-radius:10px;transition:background .2s; }.activity-row:hover { background:#111c27; }.activity-ico { width:34px;height:34px;border-radius:10px;background:#112433;color:#58c8ff;display:grid;place-items:center;flex-shrink:0; }.activity-row:nth-child(even) .activity-ico { background:#2b1724;color:#ff7cb9; }.activity-info { flex:1;min-width:0; }.activity-title { font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }.activity-meta { font-size:10px;color:#76869a;margin-top:4px; }.activity-actions { display:flex;gap:5px; }.mini-action { border:1px solid #263544;background:#0e151e;color:#9fb1c4;border-radius:7px;width:28px;height:28px; }.mini-action:hover { color:#fff;border-color:var(--site-primary); }
+.empty { text-align:center;padding:25px 10px;color:#78899c;font-size:12px;line-height:1.7; }.empty .big { font-size:25px;margin-bottom:7px; }
+.upload-zone { border:1px dashed #31516a;border-radius:13px;background:linear-gradient(145deg,#0c1822,#0b1017);padding:20px 13px;text-align:center;transition:border .2s,background .2s; }.upload-zone.drag { border-color:#58c8ff;background:#102738; }.upload-symbol { width:45px;height:45px;border-radius:14px;display:grid;place-items:center;margin:0 auto 12px;background:#122d3e;border:1px solid #23546d;color:#6ed2ff;font-size:21px; }.upload-zone h3 { font-size:12px;margin:0 0 6px; }.upload-zone p { font-size:10px;color:#8190a2;line-height:1.6;margin:0 0 13px; }.upload-zone input { display:none; }.upload-file { color:#8ce0ff;font-size:11px;margin-top:9px;overflow-wrap:anywhere; }
+.page-title-row { display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:24px; }.page-title-row h1 { font-size:calc(31px * var(--site-heading-scale));margin-bottom:8px;letter-spacing:-1.2px; }.page-title-row p { color:#8796a9;font-size:12px;line-height:1.6;margin:0; }
+.form-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px; }.field { display:grid;gap:7px; }.field.full { grid-column:1/-1; }.field label { font-size:11px;font-weight:700;color:#bdc9d7; }.control { width:100%;border:1px solid #293746;background:#090e14;color:#edf3f8;padding:12px;border-radius:10px;outline:none;font-size:12px; }.control:focus { border-color:var(--site-primary);box-shadow:0 0 0 3px #168dcc1a; }.control::placeholder { color:#627287; }.field-help { color:#728297;font-size:10px;line-height:1.5; }
+.output { margin-top:20px;border:1px solid #263746;border-radius:14px;background:#090e14;padding:20px; }.output h2 { font-size:18px;margin-bottom:8px; }.output h3 { font-size:14px;color:#d9e7f3;margin:20px 0 8px; }.output p,.output li { color:#a8b6c6;font-size:12px;line-height:1.8; }.output ul { padding-left:20px; }.output .source { color:#60caff;font-size:11px;overflow-wrap:anywhere; }.output-toolbar { display:flex;gap:8px;flex-wrap:wrap;margin-top:16px; }
+.notice { border:1px solid #5a4727;background:#211a0e;color:#f5d59b;padding:12px 14px;border-radius:11px;font-size:11px;line-height:1.65;margin-bottom:16px; }.notice.blue { border-color:#244a61;background:#0b1a25;color:#a8e2ff; }.notice.rose { border-color:#59314a;background:#21121c;color:#ffb1d4; }
+.filter-row { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:17px; }.filter-chip { border:1px solid #283746;background:#0c121a;color:#91a1b4;padding:8px 11px;border-radius:999px;font-size:10px; }.filter-chip.active,.filter-chip:hover { color:#dff5ff;border-color:#23749b;background:#102533; }
+.item-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px; }.saved-card { border:1px solid #24313f;background:linear-gradient(145deg,#101720,#0a0e14);border-radius:14px;padding:16px;transition:transform .2s,border-color .2s; }.saved-card:hover { transform:translateY(-3px);border-color:#367c9e; }.saved-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:14px; }.type-tag { font-size:9px;letter-spacing:.7px;text-transform:uppercase;color:#65cfff;background:#102838;padding:5px 7px;border-radius:6px; }.saved-card h3 { font-size:13px;margin:0 0 7px; }.saved-card p { color:#7f8fa2;font-size:10px;line-height:1.6;margin-bottom:14px; }.saved-bottom { display:flex;justify-content:space-between;align-items:center;gap:8px; }.saved-date { color:#66768a;font-size:9px; }.saved-controls { display:flex;gap:5px; }
+.flashcard-wrap { max-width:650px;margin:0 auto; }.flash-progress { display:flex;justify-content:space-between;color:#8090a4;font-size:11px;margin-bottom:10px; }.progress-track { height:4px;background:#202b37;border-radius:99px;overflow:hidden;margin-bottom:22px; }.progress-track span { display:block;height:100%;background:linear-gradient(90deg,var(--site-primary),var(--site-secondary));transition:width .25s; }.flashcard { min-height:270px;perspective:1000px;cursor:pointer; }.flash-inner { min-height:270px;position:relative;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.2,.75,.25,1); }.flashcard.flipped .flash-inner { transform:rotateY(180deg); }.flash-face { position:absolute;inset:0;backface-visibility:hidden;border:1px solid #28516a;border-radius:20px;background:radial-gradient(circle at 80% 10%,#123046 0,transparent 45%),linear-gradient(145deg,#101c29,#090d13);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:35px;box-shadow:0 20px 50px #0004; }.flash-face.back { transform:rotateY(180deg);border-color:#63304d;background:radial-gradient(circle at 15% 10%,#3b1b31 0,transparent 45%),linear-gradient(145deg,#1a111c,#090d13); }.flash-kicker { font-size:9px;letter-spacing:2px;color:#57c9ff;text-transform:uppercase;margin-bottom:22px; }.flash-face.back .flash-kicker { color:#ff7dbb; }.flash-face h2 { font-size:clamp(20px,3vw,27px);line-height:1.45;letter-spacing:-.5px;margin:0; }.flash-face p { color:#8495a9;font-size:11px;margin:20px 0 0; }.flash-controls { display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:18px; }
+.quiz-question { font-size:17px;line-height:1.5;letter-spacing:-.3px;margin:15px 0 18px; }.option { display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:13px;border:1px solid #283645;background:#0b1118;border-radius:10px;color:#c0cbd8;font-size:12px;margin-bottom:9px;transition:border .2s,background .2s; }.option .letter { width:25px;height:25px;display:grid;place-items:center;border:1px solid #334454;border-radius:7px;color:#92a6ba;font-size:10px;flex-shrink:0; }.option:hover,.option.selected { border-color:#2587b3;background:#102534;color:white; }.option.correct { border-color:#2a9b76;background:#10251f; }.option.wrong { border-color:#b74c78;background:#28131e; }.feedback { padding:12px;border-radius:10px;font-size:11px;line-height:1.6;margin-top:12px; }.feedback.good { background:#10261e;border:1px solid #286a50;color:#9be4c4; }.feedback.bad { background:#28131e;border:1px solid #78324e;color:#ffb0d0; }
+.settings-list { display:grid;gap:0; }.setting-row { display:flex;align-items:center;justify-content:space-between;gap:15px;padding:16px 0;border-bottom:1px solid #202b37; }.setting-row:last-child { border-bottom:0; }.setting-row h3 { font-size:12px;margin:0 0 5px; }.setting-row p { font-size:10px;color:#8190a3;margin:0;line-height:1.5; }.toggle { width:40px;height:22px;border-radius:99px;background:#293542;border:0;padding:3px; }.toggle span { width:16px;height:16px;background:#9ba8b8;border-radius:50%;display:block;transition:transform .2s; }.toggle.on { background:#176f9a; }.toggle.on span { transform:translateX(18px);background:white; }
+.toast { position:fixed;right:22px;bottom:22px;z-index:50;background:#111d28;border:1px solid #2d5c75;color:#d9f3ff;border-radius:12px;padding:13px 16px;font-size:12px;box-shadow:0 15px 40px #0007;max-width:min(360px,calc(100vw - 40px));animation:fadeUp .2s ease; }
+.modal-backdrop { position:fixed;inset:0;background:#020407c9;backdrop-filter:blur(8px);z-index:40;display:none;align-items:center;justify-content:center;padding:20px; }.modal-backdrop.open { display:flex; }.modal { width:min(560px,100%);max-height:85vh;overflow:auto;border:1px solid #2b3c4c;background:#0b1119;border-radius:18px;padding:22px;box-shadow:0 30px 80px #0008; }.modal-head { display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:18px; }.modal-head h2 { font-size:17px;margin:0; }.close-btn { border:1px solid #2b3948;background:#111a24;color:#b6c6d7;border-radius:8px;width:30px;height:30px; }.modal-actions { display:flex;justify-content:flex-end;gap:8px;margin-top:18px; }
+.output ol{padding-left:22px}.output a{color:#4fc3ff;text-decoration:underline}.output strong{color:#e6f1fa}.output code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#9fe0ff}.output pre{background:#05080d;border:1px solid #223140;border-radius:10px;padding:12px;overflow:auto}.output pre code{color:#cfe9f7}.key-row{display:flex;gap:8px}.btn-row{display:flex;gap:9px;flex-wrap:wrap}
+.mobile-menu { display:none; }
+@media (max-width:1100px) { .feature-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.hero { grid-template-columns:minmax(0,1fr) 230px; }.content-grid { grid-template-columns:minmax(0,1fr); } }
+@media (max-width:760px) { .layout { grid-template-columns:1fr; }.sidebar { position:fixed;z-index:30;left:0;top:0;bottom:0;height:auto;width:260px;transform:translateX(-102%);transition:transform .25s;box-shadow:20px 0 50px #0007; }.sidebar.open { transform:translateX(0); }.mobile-menu { display:grid; }.main { padding:18px 16px 30px; }.topbar { margin-bottom:24px; }.hero { grid-template-columns:1fr; }.hero-art { min-height:175px;order:-1; }.hero-copy { order:1; }.hero h1 { font-size:35px; }.page-title-row { flex-direction:column; }.item-grid { grid-template-columns:1fr; }.status-pill { display:none; }.search-panel { flex-wrap:wrap; }.search-panel input { min-width:calc(100% - 45px); }.search-panel .btn { width:100%; }.form-grid { grid-template-columns:1fr; }.field.full { grid-column:auto; }.feature-grid { gap:9px; }.feature-card { padding:13px;min-height:148px; }.feature-icon { margin-bottom:14px; }.float-chip { font-size:9px; }.chip-a { left:0; }.chip-c { right:0; } }
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.01ms !important;transition-duration:.01ms !important;scroll-behavior:auto !important; } }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+<div id="app" data-sites-preview-theme="custom">
+<div class="layout">
+<aside class="sidebar" id="sidebar">
+  <div class="brand"><div class="brand-mark">N</div><div><div class="brand-name">NeuroNotes <span>AI</span></div><div class="brand-sub">Your AI study space</div></div></div>
+  <div><div class="nav-label">WORKSPACE</div><nav class="nav-list" id="navList">
+    <button class="nav-item active" data-page="dashboard"><span class="ico">⌂</span>Dashboard</button>
+    <button class="nav-item" data-page="topics"><span class="ico">⌕</span>Explore Topics</button>
+    <button class="nav-item" data-page="pdf"><span class="ico">▤</span>PDF Studio</button>
+    <button class="nav-item" data-page="flashcards"><span class="ico">▧</span>Flashcards</button>
+    <button class="nav-item" data-page="quizzes"><span class="ico">✳</span>Quizzes</button>
+  </nav></div>
+  <div><div class="nav-label">YOUR LIBRARY</div><nav class="nav-list">
+    <button class="nav-item" data-page="bookmarks"><span class="ico">♡</span>Bookmarks <span class="nav-count" id="bookmarkCount">0</span></button>
+    <button class="nav-item" data-page="history"><span class="ico">◷</span>History <span class="nav-count" id="historyCount">0</span></button>
+  </nav></div>
+  <div class="sidebar-bottom"><div class="api-card"><div class="api-status"><span class="api-dot"></span><span id="apiStatus">Demo mode active</span></div><p>Live AI notes, summaries, flashcards and quizzes are ready to use. No setup needed.</p><button class="small-btn" data-page="settings">AI settings ↗</button></div><div class="profile"><div class="avatar">NN</div><div><div class="profile-name">Student Workspace</div><div class="profile-sub">Personal study space</div></div></div></div>
+</aside>
+<main class="main">
+  <header class="topbar"><div style="display:flex;align-items:center;gap:12px"><button class="icon-btn mobile-menu" id="mobileMenu" aria-label="Open navigation">☰</button><div class="breadcrumb">Workspace <span style="color:#435367"> / </span> <strong id="breadcrumbCurrent">Dashboard</strong></div></div><div class="top-actions"><span class="status-pill">✦ AI STUDY WORKSPACE</span><button class="icon-btn" id="quickBookmark" title="Open bookmarks">♡</button><button class="icon-btn" id="quickHistory" title="Open history">◷</button></div></header>
+
+  <section class="page active" id="page-dashboard">
+    <div class="hero"><div class="hero-copy"><div class="eyebrow">YOUR PERSONAL AI STUDY SPACE</div><h1>Your knowledge,<br><span class="gradient">beautifully organized.</span></h1><p class="lead">Turn complex topics into clear notes, transform PDFs into revision material, and make every study session count.</p><div class="search-panel"><span class="search-icon">⌕</span><input id="dashboardSearch" placeholder="What do you want to learn today?" aria-label="Search a study topic"/><button class="btn btn-primary" id="dashboardGenerate">Generate notes <span>↗</span></button></div></div>
+      <div class="hero-art" aria-label="Decorative 3D neural study illustration"><div class="orbit"></div><div class="orbit two"></div><div class="orbit three"></div><div class="core">✧</div><div class="float-chip chip-a">◈ <b>AI NOTES</b><br><span style="color:#8194a7">Ideas into clarity</span></div><div class="float-chip chip-b">▧ <b>SMART REVISION</b></div><div class="float-chip chip-c">✳ <b>QUIZ READY</b></div></div></div>
+    <div class="section-head"><h2>Your study toolkit</h2><span class="muted">Everything you need to learn smarter</span></div>
+    <div class="feature-grid">
+      <button class="feature-card" data-page="topics" style="text-align:left;color:inherit"><div class="feature-icon">✧</div><h3>AI Notes Generator</h3><p>Turn any topic into structured, student-friendly notes.</p><span class="card-arrow">↗</span></button>
+      <button class="feature-card rose" data-page="pdf" style="text-align:left;color:inherit"><div class="feature-icon">▤</div><h3>PDF Summarizer</h3><p>Upload class material and make it easier to revise.</p><span class="card-arrow">↗</span></button>
+      <button class="feature-card" data-page="flashcards" style="text-align:left;color:inherit"><div class="feature-icon">▧</div><h3>Smart Flashcards</h3><p>Practice recall with interactive question cards.</p><span class="card-arrow">↗</span></button>
+      <button class="feature-card rose" data-page="quizzes" style="text-align:left;color:inherit"><div class="feature-icon">✳</div><h3>Topic Quizzes</h3><p>Test your understanding and review explanations.</p><span class="card-arrow">↗</span></button>
+    </div>
+    <div class="content-grid"><div class="panel"><div class="panel-head"><h3>Recent study activity</h3><button class="text-btn" data-page="history">View history ↗</button></div><div class="activity-list" id="recentActivity"><div class="empty"><div class="big">◷</div>Your study history will appear here.<br>Generate your first notes to get started.</div></div></div>
+    <div class="panel"><div class="panel-head"><h3>Quick PDF summary</h3><span class="muted">PDF · TXT</span></div><div class="upload-zone" id="dashboardDrop"><div class="upload-symbol">⇧</div><h3>Drop your study material here</h3><p>Choose a PDF or text file to create short notes and summaries.</p><button class="btn btn-ghost" id="dashboardChoose">Browse files</button><input type="file" id="dashboardFile" accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown"/><div class="upload-file" id="dashboardFileName"></div></div><button class="btn btn-primary" id="dashboardProcess" style="width:100%;margin-top:12px" disabled>Summarize document ↗</button></div></div>
+  </section>
+
+  <section class="page" id="page-topics"><div class="page-title-row"><div><div class="eyebrow">LEARN ANYTHING</div><h1>Explore <span class="gradient">topics.</span></h1><p>Generate structured notes, revision guides, and concept explainers from a topic.</p></div></div><div class="panel"><div class="form-grid"><div class="field full"><label for="topicInput">What topic are you studying?</label><input class="control" id="topicInput" placeholder="e.g. Java loops, eigenvalues, operating systems..."/></div><div class="field"><label for="topicSubject">Subject</label><select class="control" id="topicSubject"><option>Computer Science</option><option>Engineering Mathematics</option><option>Digital Electronics</option><option>Artificial Intelligence</option><option>Physics</option><option>Other</option></select></div><div class="field"><label for="topicLevel">Academic level</label><select class="control" id="topicLevel"><option>First-year university</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div><div class="field"><label for="topicFormat">Output format</label><select class="control" id="topicFormat"><option value="Detailed Notes">Detailed Notes</option><option value="Short Notes">Short Notes</option><option value="Exam Revision">Exam Revision</option></select></div><div class="field"><label for="topicLanguage">Language</label><select class="control" id="topicLanguage"><option>English</option><option>Hindi</option><option>Hinglish</option></select></div><div class="field full"><label for="topicStyle">Explanation style</label><select class="control" id="topicStyle"><option>Beginner-friendly with examples</option><option>Technical and concise</option><option>Exam-focused bullet points</option></select></div></div><div style="display:flex;justify-content:flex-end;margin-top:18px"><button class="btn btn-primary" id="generateTopic">✧ Generate study notes</button></div></div><div id="topicOutput"></div></section>
+
+  <section class="page" id="page-pdf"><div class="page-title-row"><div><div class="eyebrow">DOCUMENT INTELLIGENCE</div><h1>PDF <span class="gradient">Studio.</span></h1><p>Turn lengthy course material into focused, useful revision resources.</p></div></div><div class="notice blue">Summaries are written by Groq from text extracted in your browser. Scanned PDFs (images only) need OCR. Add your Groq key in Settings first.</div><div class="panel"><div class="upload-zone" id="pdfDrop"><div class="upload-symbol">⇧</div><h3 id="pdfDropTitle">Drop your PDF here</h3><p>Choose a PDF or text file. Your selected file stays in this preview session.</p><button class="btn btn-ghost" id="pdfChoose">Browse files</button><input type="file" id="pdfFile" accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown"/><div class="upload-file" id="pdfFileName"></div></div><div class="form-grid" style="margin-top:18px"><div class="field"><label for="pdfOutputType">What would you like to create?</label><select class="control" id="pdfOutputType"><option>Short Notes</option><option>Detailed Summary</option><option>Exam Revision Notes</option><option>Important Definitions</option><option>Chapter-wise Outline</option></select></div><div class="field"><label for="pdfLanguage">Output language</label><select class="control" id="pdfLanguage"><option>English</option><option>Hindi</option><option>Hinglish</option></select></div></div><div style="display:flex;justify-content:flex-end;margin-top:18px"><button class="btn btn-primary" id="processPdf" disabled>Generate summary ↗</button></div></div><div id="pdfOutput"></div></section>
+
+  <section class="page" id="page-flashcards"><div class="page-title-row"><div><div class="eyebrow">ACTIVE RECALL</div><h1>Smart <span class="gradient">flashcards.</span></h1><p>Flip a card, retrieve the idea, and strengthen your memory.</p></div><button class="btn btn-ghost" id="newFlashDeck">＋ New deck</button></div><div class="flashcard-wrap"><div class="flash-progress"><span id="flashCounter">Card 1 of 5</span><span id="flashKnown">0 known · 0 to review</span></div><div class="progress-track"><span id="flashProgress" style="width:20%"></span></div><div class="flashcard" id="flashcard" tabindex="0" role="button" aria-label="Flip flashcard"><div class="flash-inner"><div class="flash-face front"><div class="flash-kicker">QUESTION · CLICK TO FLIP</div><h2 id="flashFront">What is a variable in programming?</h2><p>Think of your answer before revealing it.</p></div><div class="flash-face back"><div class="flash-kicker">ANSWER</div><h2 id="flashBack">A named storage location used to hold a value.</h2><p>Mark your confidence below.</p></div></div></div><div class="flash-controls"><button class="btn btn-ghost" id="flashPrev">← Previous</button><button class="btn btn-ghost" id="flashShuffle">⤨ Shuffle</button><button class="btn btn-primary" id="flashNext">Next →</button></div><div class="flash-controls"><button class="btn btn-ghost" id="flashReview">↻ Needs revision</button><button class="btn btn-rose" id="flashKnow">✓ I know this</button><button class="btn btn-ghost" id="bookmarkDeck">♡ Bookmark deck</button></div><div class="muted" style="text-align:center;margin-top:15px">Demo deck: Java and programming fundamentals. Generate cards from your own notes in the topic or PDF workflows.</div></div></section>
+
+  <section class="page" id="page-quizzes"><div class="page-title-row"><div><div class="eyebrow">CHECK YOUR UNDERSTANDING</div><h1>Knowledge <span class="gradient">check.</span></h1><p>Practice with a sample quiz or create one around a topic you are learning.</p></div></div><div class="panel" id="quizSetup"><div class="form-grid"><div class="field full"><label for="quizTopic">Quiz topic</label><input class="control" id="quizTopic" value="Java programming basics" placeholder="Enter a topic..."/></div><div class="field"><label for="quizDifficulty">Difficulty</label><select class="control" id="quizDifficulty"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div><div class="field"><label for="quizCount">Number of questions</label><select class="control" id="quizCount"><option value="5">5 questions</option><option value="3">3 questions</option><option value="10">10 questions</option></select></div></div><div style="display:flex;gap:9px;justify-content:flex-end;margin-top:18px"><button class="btn btn-ghost" id="sampleQuiz">Try sample quiz</button><button class="btn btn-primary" id="generateQuiz">Generate quiz ↗</button></div><div class="field-help" style="margin-top:12px">With a Groq key saved in Settings, quizzes are AI-generated for any topic. Without it, a local sample set is used.</div></div><div id="quizArea"></div></section>
+
+  <section class="page" id="page-bookmarks"><div class="page-title-row"><div><div class="eyebrow">SAVED FOR LATER</div><h1>Your <span class="gradient">bookmarks.</span></h1><p>Keep important notes and study resources within reach.</p></div></div><div class="filter-row" id="bookmarkFilters"><button class="filter-chip active" data-filter="All">All items</button><button class="filter-chip" data-filter="Notes">Notes</button><button class="filter-chip" data-filter="Summary">Summaries</button><button class="filter-chip" data-filter="Flashcards">Flashcards</button><button class="filter-chip" data-filter="Quiz">Quizzes</button></div><div class="item-grid" id="bookmarkGrid"></div></section>
+
+  <section class="page" id="page-history"><div class="page-title-row"><div><div class="eyebrow">YOUR LEARNING TRAIL</div><h1>Study <span class="gradient">history.</span></h1><p>Revisit previous generations and continue where you left off.</p></div><button class="btn btn-ghost" id="clearHistory">Clear history</button></div><div class="field" style="margin-bottom:16px"><input class="control" id="historySearch" placeholder="Search by topic or content type..."/></div><div class="filter-row" id="historyFilters"><button class="filter-chip active" data-filter="All">All activity</button><button class="filter-chip" data-filter="Notes">Notes</button><button class="filter-chip" data-filter="Summary">Summaries</button><button class="filter-chip" data-filter="Quiz">Quizzes</button><button class="filter-chip" data-filter="Flashcards">Flashcards</button></div><div class="item-grid" id="historyGrid"></div></section>
+
+  <section class="page" id="page-settings"><div class="page-title-row"><div><div class="eyebrow">PREFERENCES & INTEGRATIONS</div><h1>Workspace <span class="gradient">settings.</span></h1><p>Connect Groq to power live AI across the whole workspace.</p></div></div><div class="notice blue"><strong>How your key is handled:</strong> it is saved only in this browser (localStorage) and sent directly to Groq, never to another server. This is fine for a college demo. For a public deployment, move the key to a backend instead.</div><div class="panel" style="margin-bottom:16px"><div class="panel-head"><h3>Groq integration</h3><span class="type-tag" id="settingsApiBadge">NOT CONNECTED</span></div><div class="form-grid"><div class="field full"><label for="groqKeyInput">Groq API key</label><div class="key-row"><input class="control" id="groqKeyInput" type="password" placeholder="gsk_..." autocomplete="off" spellcheck="false"/><button class="btn btn-ghost" id="groqKeyToggle" type="button">Show</button></div><span class="field-help" id="apiHint">No key saved yet.</span></div><div class="field full"><label for="groqModel">Model</label><select class="control" id="groqModel"><option value="openai/gpt-oss-120b">GPT-OSS 120B (best quality)</option><option value="openai/gpt-oss-20b">GPT-OSS 20B (fastest)</option></select></div><div class="field full"><div class="btn-row"><button class="btn btn-primary" id="groqKeySave" type="button">Save key</button><button class="btn btn-ghost" id="groqKeyTest" type="button">Test connection</button><button class="btn btn-ghost" id="groqKeyClear" type="button">Remove key</button><a class="btn btn-ghost" href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer">Get a key ↗</a></div></div></div></div><div class="panel"><div class="panel-head"><h3>Production checklist</h3><span class="muted">Backend setup</span></div><div class="settings-list"><div class="setting-row"><div><h3>Secure API route</h3><p>Create a server endpoint for topic research and AI generation.</p></div><span class="type-tag">REQUIRED</span></div><div class="setting-row"><div><h3>PDF text extraction</h3><p>Use a server-side PDF parser; add OCR for scanned documents.</p></div><span class="type-tag">REQUIRED</span></div><div class="setting-row"><div><h3>Database persistence</h3><p>Store generated content, bookmarks, history, decks, and quiz attempts per user.</p></div><span class="type-tag">REQUIRED</span></div><div class="setting-row"><div><h3>Authentication & access rules</h3><p>Protect private uploads and ensure each user only sees their own content.</p></div><span class="type-tag">RECOMMENDED</span></div></div></div></section>
+</main></div>
+<div class="modal-backdrop" id="modalBackdrop"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><h2 id="modalTitle">Create flashcards</h2><button class="close-btn" id="modalClose" aria-label="Close dialog">×</button></div><div id="modalBody"></div><div class="modal-actions"><button class="btn btn-ghost" id="modalCancel">Cancel</button><button class="btn btn-primary" id="modalConfirm">Create deck</button></div></div></div>
+<div id="toastRoot" aria-live="polite"></div>
+</div>
+<script>
+(() => {
+  const $ = (s, root=document) => root.querySelector(s);
+  const $$ = (s, root=document) => [...root.querySelectorAll(s)];
+  const STORAGE_KEY = 'neuronnnotes-preview-v1';
+  const sampleCards = [
+    {front:'What is a variable in programming?',back:'A named storage location used to hold a value.'},
+    {front:'What does a while loop do?',back:'It repeats a block of code while its condition remains true.'},
+    {front:'What does the % operator return in Java?',back:'The remainder after integer division.'},
+    {front:'What is an algorithm?',back:'A finite sequence of clear steps used to solve a problem.'},
+    {front:'What is the purpose of a method?',back:'To group reusable instructions that perform a particular task.'}
+  ];
+  const sampleQuestions = [
+    {q:'Which Java operator returns the remainder after division?',options:['/','%','*','=='],answer:1,explanation:'The modulo operator (%) returns the remainder.'},
+    {q:'Which loop checks its condition before each iteration?',options:['while loop','switch statement','class declaration','import statement'],answer:0,explanation:'A while loop checks its condition before executing the body.'},
+    {q:'What is an algorithm?',options:['A programming language','A computer component','A finite sequence of steps','A type of variable'],answer:2,explanation:'An algorithm is a finite, ordered sequence of steps to solve a problem.'},
+    {q:'Which type is commonly used for whole numbers in Java?',options:['boolean','int','String','char[]'],answer:1,explanation:'The int type stores 32-bit signed integer values.'},
+    {q:'What does Scanner help a beginner do?',options:['Read input','Draw images','Create a database automatically','Compile Java itself'],answer:0,explanation:'Scanner can read input, such as integers and text, from System.in.'},
+    {q:'What is the first index of a Java String?',options:['-1','1','0','Depends on the text'],answer:2,explanation:'Java String indexing starts at zero.'},
+    {q:'Which keyword declares a class in Java?',options:['define','function','class','newclass'],answer:2,explanation:'The class keyword declares a class.'},
+    {q:'What does n % 10 commonly help extract from a positive integer?',options:['First digit','Last digit','Number of digits','Square root'],answer:1,explanation:'For a positive integer, n % 10 gives the last digit.'},
+    {q:'Which statement skips to the next loop iteration?',options:['break','return','continue','exit'],answer:2,explanation:'continue skips the rest of the current iteration.'},
+    {q:'What does n / 10 do for a positive int in Java?',options:['Removes the last digit','Adds a digit','Reverses digits','Returns the remainder'],answer:0,explanation:'Integer division by 10 removes the last decimal digit.'}
+  ];
+  let state = loadState();
+  let selectedFile = null;
+  let activeFlashDeck = sampleCards.map(x=>({...x}));
+  let flashIndex = 0;
+  let flashKnown = new Set();
+  let flashReview = new Set();
+  let quizState = null;
+  let currentBookmarkFilter = 'All';
+  let currentHistoryFilter = 'All';
+  let modalCallback = null;
+  const KEY_STORE='neuronotes-groq-key', MODEL_STORE='neuronotes-groq-model';
+  const DEFAULT_KEY='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';
+  const getKey=()=>{try{return localStorage.getItem(KEY_STORE)||DEFAULT_KEY;}catch{return DEFAULT_KEY;}};
+  const DEFAULT_MODEL='openai/gpt-oss-120b';
+  const getModel=()=>{try{return localStorage.getItem(MODEL_STORE)||DEFAULT_MODEL;}catch{return DEFAULT_MODEL;}};
+  async function loadModels(key=getKey(),bad=''){
+    try{
+      const r=await fetch('https://api.groq.com/openai/v1/models',{headers:{Authorization:'Bearer '+key}});
+      if(!r.ok)return false;
+      const ids=((await r.json()).data||[]).map(m=>m.id).filter(id=>!/whisper|orpheus|tts|guard|safeguard|embed/i.test(id)).sort();
+      if(!ids.length)return false;
+      const sel=$('#groqModel'),cur=getModel();
+      sel.innerHTML=ids.map(id=>`<option value="${escapeHtml(id)}">${escapeHtml(id)}</option>`).join('');
+      const pick=(ids.includes(cur)&&cur!==bad)?cur:(ids.includes(DEFAULT_MODEL)&&DEFAULT_MODEL!==bad?DEFAULT_MODEL:(ids.find(i=>i.startsWith('openai/gpt-oss')&&i!==bad)||ids.find(i=>i!==bad)||ids[0]));
+      sel.value=pick;try{localStorage.setItem(MODEL_STORE,pick);}catch{}
+      return pick!==cur;
+    }catch{return false;}
+  }
+  async function groq(messages,opts={}){
+    const {json=false,max=2500,temp=0.4,key=getKey()}=opts;
+    if(!key) throw new Error('Add your Groq API key in Settings first.');
+    for(let attempt=0;attempt<2;attempt++){
+      const model=getModel(),oss=model.startsWith('openai/gpt-oss');let r;
+      for(const useJson of (json?[true,false]:[false])){
+        const body={model,messages,temperature:temp,max_tokens:max+(oss?2000:0)};if(oss)body.reasoning_effort='low';if(useJson)body.response_format={type:'json_object'};
+        try{r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify(body)});}
+        catch{throw new Error('Network error: could not reach Groq. Check your internet connection.');}
+        if(r.status!==400||!useJson)break;
+      }
+      if(r.ok){const d=await r.json();return (d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||'';}
+      let m='';try{m=(await r.json()).error?.message||'';}catch{}
+      if(r.status===401) throw new Error('Invalid Groq API key. Check it in Settings.');
+      if(r.status===429) throw new Error('Groq rate limit reached. Wait a moment and try again.');
+      if(attempt===0&&/does not exist|do not have access|decommission/i.test(m)&&await loadModels(key,model))continue;
+      throw new Error((m||('Groq error '+r.status))+(/does not exist|do not have access|decommission/i.test(m)?' Open Settings and choose another model.':''));
+    }
+  }
+  function parseJson(t){try{return JSON.parse(t);}catch{try{return JSON.parse(String(t).match(/\{[\s\S]*\}/)[0]);}catch{throw new Error('Could not read the AI response. Please try again.');}}}
+  async function aiCards(topic,terms,source){
+    const t=terms&&terms.length?`\nCover these concepts: ${terms.join(', ')}.`:''; const ctx=source?`\n\nBase the cards on these notes:\n${source.slice(0,9000)}`:'';
+    const out=await groq([{role:'system',content:'You create accurate study flashcards. Reply ONLY with JSON: {"cards":[{"front":"question","back":"concise correct answer"}]}.'},{role:'user',content:`Create 10 flashcards on "${topic}".${t}${ctx}`}],{json:true,max:2500,temp:0.3});
+    const cards=(parseJson(out).cards||[]).filter(c=>c&&c.front&&c.back).map(c=>({front:String(c.front),back:String(c.back)}));
+    if(!cards.length) throw new Error('The AI returned no flashcards. Try again.'); return cards;
+  }
+  async function aiQuiz(topic,source){
+    const n=Number($('#quizCount')?.value||5),diff=$('#quizDifficulty')?.value||'Beginner'; const ctx=source?`\n\nBase the questions on these notes:\n${source.slice(0,9000)}`:'';
+    const out=await groq([{role:'system',content:'You write accurate multiple-choice quiz questions for university students. Reply ONLY with JSON: {"questions":[{"q":"...","options":["A","B","C","D"],"answer":0,"explanation":"..."}]}. Exactly 4 options; "answer" is the 0-based index of the single correct option; the explanation says why it is correct.'},{role:'user',content:`Write ${n} ${diff}-level questions on "${topic}".${ctx}`}],{json:true,max:3000,temp:0.3});
+    const qs=(parseJson(out).questions||[]).filter(q=>q&&q.q&&Array.isArray(q.options)&&q.options.length===4&&Number.isInteger(q.answer)&&q.answer>=0&&q.answer<4).map(q=>{const o=q.options.map((x,i)=>({x:String(x),c:i===q.answer}));for(let i=3;i>0;i--){const j=Math.floor(Math.random()*(i+1));[o[i],o[j]]=[o[j],o[i]];}return{q:String(q.q),options:o.map(a=>a.x),answer:o.findIndex(a=>a.c),explanation:String(q.explanation||'')};});
+    if(!qs.length) throw new Error('The AI returned no usable questions. Try again.'); return qs;
+  }
+  async function quizFor(topic,source){ return getKey()?await aiQuiz(topic,source):buildQuestions(topic); }
+  function loadState(){
+    try { const v=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); return {history:Array.isArray(v.history)?v.history:[],bookmarks:Array.isArray(v.bookmarks)?v.bookmarks:[]}; }
+    catch { return {history:[],bookmarks:[]}; }
+  }
+  function persist(){ try { localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); } catch { toast('Browser storage is full. Export or clear some saved content.'); } renderCounts(); }
+  function uid(){ return 'nn-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7); }
+  function escapeHtml(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function toast(message){ const root=$('#toastRoot'); root.innerHTML=`<div class="toast">${escapeHtml(message)}</div>`; clearTimeout(toast.timer); toast.timer=setTimeout(()=>root.innerHTML='',3200); }
+  function nowLabel(){ return new Date().toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }
+  function navigate(page){
+    const target=$('#page-'+page); if(!target) return;
+    $$('.page').forEach(p=>p.classList.toggle('active',p===target));
+    $$('.nav-item[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
+    const navNames={dashboard:'Dashboard',topics:'Explore Topics',pdf:'PDF Studio',flashcards:'Flashcards',quizzes:'Quizzes',bookmarks:'Bookmarks',history:'History',settings:'Settings'};
+    $('#breadcrumbCurrent').textContent=navNames[page]||'Dashboard';
+    $('#sidebar').classList.remove('open');
+    if(page==='bookmarks') renderBookmarks(); if(page==='history') renderHistory();
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  document.addEventListener('click',e=>{
+    const nav=e.target.closest('[data-page]');
+    if(nav){e.preventDefault();navigate(nav.dataset.page);}
+  });
+  $('#mobileMenu').addEventListener('click',()=>$('#sidebar').classList.toggle('open'));
+  $('#quickBookmark').addEventListener('click',()=>navigate('bookmarks'));
+  $('#quickHistory').addEventListener('click',()=>navigate('history'));
+  function renderCounts(){ $('#bookmarkCount').textContent=state.bookmarks.length; $('#historyCount').textContent=state.history.length; }
+  function addHistory(item){
+    const entry={id:uid(),title:item.title,type:item.type,content:item.content||'',createdAt:Date.now(),meta:item.meta||{},sources:item.sources||[],cards:item.cards||null,questions:item.questions||null};
+    state.history.unshift(entry); state.history=state.history.slice(0,100); persist(); renderRecent(); return entry;
+  }
+  function isBookmarked(id){ return state.bookmarks.some(b=>b.sourceId===id); }
+  function bookmarkItem(item){
+    const existing=state.bookmarks.find(b=>b.sourceId===item.id);
+    if(existing){state.bookmarks=state.bookmarks.filter(b=>b.sourceId!==item.id);toast('Removed from bookmarks.');}
+    else {state.bookmarks.unshift({id:uid(),sourceId:item.id,title:item.title,type:item.type,content:item.content||'',createdAt:Date.now(),meta:item.meta||{},sources:item.sources||[],cards:item.cards||null,questions:item.questions||null});toast('Saved to bookmarks.');}
+    persist();renderBookmarks();renderRecent();
+  }
+  function renderRecent(){
+    const el=$('#recentActivity'); const items=state.history.slice(0,4);
+    if(!items.length){el.innerHTML='<div class="empty"><div class="big">◷</div>Your study history will appear here.<br>Generate your first notes to get started.</div>';return;}
+    el.innerHTML=items.map(item=>`<div class="activity-row"><div class="activity-ico">${iconFor(item.type)}</div><div class="activity-info"><div class="activity-title">${escapeHtml(item.title)}</div><div class="activity-meta">${escapeHtml(item.type)} · ${new Date(item.createdAt).toLocaleDateString()}</div></div><div class="activity-actions"><button class="mini-action" data-open="${item.id}" title="Open">↗</button><button class="mini-action" data-bookmark="${item.id}" title="Bookmark">${isBookmarked(item.id)?'♥':'♡'}</button></div></div>`).join('');
+  }
+  function iconFor(type){return type==='Summary'?'▤':type==='Quiz'?'✳':type==='Flashcards'?'▧':'✧';}
+  function typeClass(type){return type==='Summary'?'Summary':type==='Quiz'?'Quiz':type==='Flashcards'?'Flashcards':'Notes';}
+  function itemCard(item, mode){
+    const bookmarked=isBookmarked(item.id)||state.bookmarks.some(b=>b.id===item.id);
+    return `<article class="saved-card"><div class="saved-top"><span class="type-tag">${escapeHtml(item.type)}</span><button class="mini-action" data-${mode==='bookmark'?'remove-bookmark':'bookmark'}="${item.id}" title="${mode==='bookmark'?'Remove bookmark':'Bookmark'}">${mode==='bookmark'?'×':bookmarked?'♥':'♡'}</button></div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml((item.content||'Study resource saved for quick revision.').replace(/[#*`\n]/g,' ').slice(0,135))}${(item.content||'').length>135?'…':''}</p><div class="saved-bottom"><span class="saved-date">${new Date(item.createdAt).toLocaleDateString()}</span><div class="saved-controls"><button class="btn btn-ghost" style="padding:7px 9px;font-size:10px" data-open="${item.id}" data-source="${mode}">Open ↗</button>${mode==='history'?`<button class="mini-action" data-delete-history="${item.id}" title="Delete history item">⌫</button>`:''}</div></div></article>`;
+  }
+  function renderBookmarks(){
+    const el=$('#bookmarkGrid'); let items=state.bookmarks;
+    if(currentBookmarkFilter!=='All') items=items.filter(x=>typeClass(x.type)===currentBookmarkFilter);
+    el.innerHTML=items.length?items.map(x=>itemCard(x,'bookmark')).join(''):'<div class="panel empty" style="grid-column:1/-1"><div class="big">♡</div>No bookmarks here yet.<br>Save useful notes, summaries, or study decks to find them quickly.</div>';
+  }
+  function renderHistory(){
+    const el=$('#historyGrid');const q=$('#historySearch').value.trim().toLowerCase();let items=state.history;
+    if(currentHistoryFilter!=='All') items=items.filter(x=>typeClass(x.type)===currentHistoryFilter);
+    if(q) items=items.filter(x=>(x.title+' '+x.type+' '+x.content).toLowerCase().includes(q));
+    el.innerHTML=items.length?items.map(x=>itemCard(x,'history')).join(''):'<div class="panel empty" style="grid-column:1/-1"><div class="big">◷</div>No matching study activity.<br>Generate notes or complete a quiz to build your history.</div>';
+  }
+  $('#bookmarkFilters').addEventListener('click',e=>{const b=e.target.closest('[data-filter]');if(!b)return;currentBookmarkFilter=b.dataset.filter;$$('#bookmarkFilters .filter-chip').forEach(x=>x.classList.toggle('active',x===b));renderBookmarks();});
+  $('#historyFilters').addEventListener('click',e=>{const b=e.target.closest('[data-filter]');if(!b)return;currentHistoryFilter=b.dataset.filter;$$('#historyFilters .filter-chip').forEach(x=>x.classList.toggle('active',x===b));renderHistory();});
+  $('#historySearch').addEventListener('input',renderHistory);
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('[data-bookmark]'); if(b){const item=findItem(b.dataset.bookmark);if(item)bookmarkItem(item);}
+    const rm=e.target.closest('[data-remove-bookmark]');if(rm){state.bookmarks=state.bookmarks.filter(x=>x.id!==rm.dataset.removeBookmark);persist();renderBookmarks();toast('Bookmark removed.');}
+    const del=e.target.closest('[data-delete-history]');if(del){state.history=state.history.filter(x=>x.id!==del.dataset.deleteHistory);persist();renderHistory();renderRecent();toast('History entry deleted.');}
+    const op=e.target.closest('[data-open]');if(op)openItem(op.dataset.open,op.dataset.source);
+  });
+  function findItem(id){return state.history.find(x=>x.id===id)||state.bookmarks.find(x=>x.id===id)||state.bookmarks.find(x=>x.sourceId===id);}
+  function openItem(id,source){const item=findItem(id);if(!item){toast('This saved item is no longer available.');return;}if(item.type==='Flashcards'&&item.cards){activeFlashDeck=item.cards.map(c=>({...c}));flashIndex=0;flashKnown.clear();flashReview.clear();renderFlash();navigate('flashcards');return;}if(item.type==='Quiz'&&item.questions){startQuiz(item.title,item.questions);navigate('quizzes');return;}if(item.type==='Summary'){$('#pdfOutput').innerHTML=renderOutput(item,'Summary');navigate('pdf');}else{$('#topicOutput').innerHTML=renderOutput(item,'Notes');navigate('topics');}}
+  function renderOutput(item,kind){const saved=isBookmarked(item.id)||state.bookmarks.some(x=>x.sourceId===item.id);const sourceList=(item.sources||[]).map(s=>`<li><a class="source" href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(s.title||s.url)}</a></li>`).join('');return `<div class="output"><div class="saved-top"><span class="type-tag">${escapeHtml(item.type)}</span><span class="muted">${saved?'♥ Bookmarked':'Study material'}</span></div><h2>${escapeHtml(item.title)}</h2><div class="output-body">${contentToHtml(item.content)}</div>${sourceList?`<h3>Sources</h3><ul>${sourceList}</ul>`:''}<div class="output-toolbar"><button class="btn btn-ghost" data-copy="${item.id}">Copy text</button><button class="btn btn-ghost" data-download="${item.id}">Download .txt</button><button class="btn btn-rose" data-bookmark="${item.id}">${saved?'♥ Saved':'♡ Bookmark'}</button><button class="btn btn-ghost" data-make-cards="${item.id}">Make flashcards</button><button class="btn btn-ghost" data-make-quiz="${item.id}">Make quiz</button></div></div>`;}
+  function stripLinks(c){return c.replace(/\[([^\]]+)\]\(https?:[^)]*\)/g,'$1').replace(/https?:\/\/\S+/g,'');}
+  function sourcesBlock(topic){
+    const q=encodeURIComponent(topic),d=new Date().toLocaleDateString();
+    return `\n\n## How to verify these notes\n**Note:** These notes were generated by AI (Groq, model ${getModel()}) on ${d}. AI can make mistakes, so cross-check them with the References above and these search links before submitting.\n\n- [Wikipedia: ${topic}](https://en.wikipedia.org/w/index.php?search=${q})\n- [Google Scholar: research papers](https://scholar.google.com/scholar?q=${q})\n- [Google Books: textbooks](https://www.google.com/search?tbm=bks&q=${q})\n- [Britannica: ${topic}](https://www.britannica.com/search?query=${q})`;
+  }
+  function inline(s){return s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/(^|[\s(])\*([^*\s][^*]*?)\*(?=[\s).,;:]|$)/g,'$1<em>$2</em>').replace(/`([^`]+)`/g,'<code>$1</code>');}
+  function contentToHtml(content){
+    const lines=escapeHtml(content||'No content available.').split('\n');let out='',list=null,para=[],code=false;
+    const fp=()=>{if(para.length){out+='<p>'+inline(para.join('<br>'))+'</p>';para=[];}},fl=()=>{if(list){out+=`</${list}>`;list=null;}};
+    for(const raw of lines){const l=raw.trim();let m;
+      if(l.startsWith('```')){fp();fl();out+=code?'</code></pre>':'<pre><code>';code=!code;continue;}
+      if(code){out+=raw+'\n';continue;}
+      if(!l){fp();fl();continue;}
+      if(m=l.match(/^(#{1,4})\s+(.*)/)){fp();fl();out+=m[1].length===1?`<h2>${inline(m[2])}</h2>`:`<h3>${inline(m[2])}</h3>`;continue;}
+      if(m=l.match(/^[-•*]\s+(.*)/)){fp();if(list!=='ul'){fl();out+='<ul>';list='ul';}out+=`<li>${inline(m[1])}</li>`;continue;}
+      if(m=l.match(/^\d+[.)]\s+(.*)/)){fp();if(list!=='ol'){fl();out+='<ol>';list='ol';}out+=`<li>${inline(m[1])}</li>`;continue;}
+      fl();para.push(l);}
+    fp();fl();if(code)out+='</code></pre>';return out;
+  }
+  document.addEventListener('click',e=>{
+    const cp=e.target.closest('[data-copy]');if(cp){const item=findItem(cp.dataset.copy);if(item)copyText(item.content);}
+    const dl=e.target.closest('[data-download]');if(dl){const item=findItem(dl.dataset.download);if(item)downloadText(item.title+'.txt',item.content);}
+    const mc=e.target.closest('[data-make-cards]');if(mc){const item=findItem(mc.dataset.makeCards);if(item)createCardsFromItem(item);}
+    const mq=e.target.closest('[data-make-quiz]');if(mq){const item=findItem(mq.dataset.makeQuiz);if(item){$('#quizTopic').value=item.title;navigate('quizzes');toast('Preparing quiz…');quizFor(item.title,item.content).then(qs=>startQuiz(item.title,qs)).catch(e=>toast(e.message));}}
+  });
+  function copyText(text){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>toast('Copied to clipboard.')).catch(()=>fallbackCopy(text));}else fallbackCopy(text);}
+  function fallbackCopy(text){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Copied to clipboard.');}catch{toast('Copy is not available in this browser.');}ta.remove();}
+  function downloadText(name,text){const blob=new Blob([text||''],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name.replace(/[\\/:*?"<>|]/g,'_');a.click();URL.revokeObjectURL(url);toast('Download prepared.');}
+  async function createCardsFromItem(item){if(getKey()){try{toast('Generating flashcards…');const deck=await aiCards(item.title,[],item.content);activeFlashDeck=deck;flashIndex=0;flashKnown.clear();flashReview.clear();addHistory({title:'Flashcards: '+item.title,type:'Flashcards',content:'Flashcard deck generated from '+item.title,cards:deck});navigate('flashcards');renderFlash();toast('Flashcard deck created.');return;}catch(e){toast(e.message);return;}}
+    const paragraphs=(item.content||'').split(/\n+/).map(x=>x.replace(/^#+\s*|^[-•*]\s*/,'').trim()).filter(x=>x.length>20);const cards=paragraphs.slice(0,10).map((p,i)=>({front:`What is the key idea in point ${i+1} about ${item.title}?`,back:p.slice(0,320)}));activeFlashDeck=cards.length?cards:sampleCards.map(x=>({...x}));flashIndex=0;flashKnown.clear();flashReview.clear();const saved=addHistory({title:'Flashcards: '+item.title,type:'Flashcards',content:`Flashcard deck generated from ${item.title}`,cards:activeFlashDeck});navigate('flashcards');renderFlash();toast('Flashcard deck created.');}
+  function buildNotes(topic,format,subject,level,style,language){
+    const safeTopic=topic.trim();
+    if(format==='Short Notes') return `# ${safeTopic}\n\n## Quick overview\n${safeTopic} is a concept worth understanding through its definition, purpose, and practical use. These concise notes are a starting point for revision.\n\n## Key points\n- Start with a clear definition of ${safeTopic}.\n- Understand the core principle and the problem it solves.\n- Learn the main steps, properties, or components.\n- Work through one simple example before attempting harder questions.\n- Review common mistakes and the conditions where the concept applies.\n\n## Revision checklist\n- Can you explain the idea in your own words?\n- Can you give an example?\n- Can you compare it with a related concept?\n\n## Important note\nThis is sample content, not a live AI response. Add your Groq API key in Settings to generate topic-specific notes.`;
+    return `# ${safeTopic}\n\n## 1. Overview\nThese ${format.toLowerCase()} introduce ${safeTopic} for ${level.toLowerCase()} learners in ${subject}. Start by identifying the problem this concept solves and the vocabulary used to describe it.\n\n## 2. Core concepts\n- **Definition:** Write a precise explanation of ${safeTopic} in one or two sentences.\n- **Purpose:** Identify why the concept is useful and where it is applied.\n- **Main components:** Break the topic into smaller ideas and understand how they connect.\n- **Process:** Learn the sequence of steps or rules involved.\n\n## 3. How to study it\n1. Read the definition and highlight unfamiliar terms.\n2. Explain the central idea without looking at your notes.\n3. Work through a simple example step by step.\n4. Test yourself with a question and explain the answer.\n\n## 4. Common mistakes\n- Memorizing terminology without understanding the underlying idea.\n- Skipping conditions, assumptions, or edge cases.\n- Confusing a related concept with ${safeTopic}.\n- Moving to advanced problems before practicing the basics.\n\n## 5. Exam revision\n- Prepare a concise definition.\n- Learn the key steps, properties, or formulas relevant to your syllabus.\n- Practice one conceptual question and one application question.\n- Review your course material for the exact terminology expected in your examination.\n\n## Key takeaway\nUnderstand the definition, explain the purpose, practice an example, and check your understanding.\n\n**Sample mode:** These are illustrative starter notes. Add your Groq API key in Settings for real, topic-specific notes.`;
+  }
+  async function generateTopic(topicOverride){
+    const topic=(topicOverride||$('#topicInput').value).trim();if(!topic){toast('Enter a topic to generate notes.');return;}
+    const format=$('#topicFormat').value,subject=$('#topicSubject').value,level=$('#topicLevel').value,style=$('#topicStyle').value,language=$('#topicLanguage').value,btn=$('#generateTopic');
+    btn.disabled=true;btn.textContent='Generating…';
+    $('#topicOutput').innerHTML='<div class="output"><div class="muted">✧ Writing your study notes…</div><div class="progress-track" style="margin-top:13px"><span style="width:65%"></span></div></div>';
+    let content;
+    try{
+      if(getKey()){
+        const spec={'Detailed Notes':'Detailed Notes: thorough and sufficient, not thin. Include overview, precise definitions, core concepts explained step by step, worked examples (with code if relevant), common mistakes, real-world applications and key takeaways.','Short Notes':'Short Notes: concise overview, key points, one example and a revision checklist.','Exam Revision':'Exam Revision: important definitions, formulas or rules, likely exam questions with short model answers, and a quick-recall checklist.'}[format]||format;
+        content=await groq([{role:'system',content:'You are an expert university tutor writing accurate, reliable study notes. Be factually correct; if you are unsure, say so instead of guessing. Write Markdown only: # title, ## sections, ### subsections, - bullets, 1. numbered steps, **bold** key terms, fenced code blocks only for code. Always leave a blank line after every heading and before every list. End the notes with a "## References" section listing 4-6 real, well-known authoritative sources for this topic (standard textbooks with author, title and edition; official documentation; established encyclopedias or organizations). List only sources you are confident exist. Never invent URLs, page numbers, DOIs or quotes, and give no links.'},{role:'user',content:`Topic: ${topic}\nSubject: ${subject}\nAcademic level: ${level}\nFormat: ${spec}\nExplanation style: ${style}\nLanguage: ${language} (keep standard technical terms in English where natural)`}],{max:format==='Detailed Notes'?3900:2600});
+        content=stripLinks(content)+sourcesBlock(topic);
+      } else { await new Promise(r=>setTimeout(r,420)); content=buildNotes(topic,format,subject,level,style,language); toast('Sample notes shown. Add your Groq API key in Settings for real AI notes.'); }
+    }catch(e){ $('#topicOutput').innerHTML=`<div class="notice rose" style="margin-top:20px">${escapeHtml(e.message)}</div>`; btn.disabled=false;btn.innerHTML='✧ Generate study notes';return; }
+    const item=addHistory({title:topic,type:'Notes',content,meta:{format,subject,level,style,language}});
+    $('#topicOutput').innerHTML=renderOutput(item,'Notes');btn.disabled=false;btn.innerHTML='✧ Generate study notes';if(getKey())toast('Notes generated with Groq.');
+  }
+  $('#dashboardGenerate').addEventListener('click',()=>{const t=$('#dashboardSearch').value.trim();navigate('topics');$('#topicInput').value=t; if(t)generateTopic(t);else $('#topicInput').focus();});
+  $('#dashboardSearch').addEventListener('keydown',e=>{if(e.key==='Enter')$('#dashboardGenerate').click();});
+  $('#generateTopic').addEventListener('click',()=>generateTopic());
+  $('#topicInput').addEventListener('keydown',e=>{if(e.key==='Enter')generateTopic();});
+
+  function attachFileInput(inputId, nameId, buttonId, processId, dropId){
+    const input=$('#'+inputId), name=$('#'+nameId), button=$('#'+buttonId), process=$('#'+processId), drop=$('#'+dropId);
+    button.addEventListener('click',()=>input.click());
+    input.addEventListener('change',()=>{const file=input.files&&input.files[0];if(!file)return;if(file.size>12*1024*1024){toast('Please choose a file smaller than 12 MB.');input.value='';return;}if(!/\.(pdf|txt|md)$/i.test(file.name)){toast('Choose a PDF, TXT, or Markdown file.');input.value='';return;}selectedFile=file;name.textContent=`Selected: ${file.name} · ${(file.size/1024).toFixed(0)} KB`;process.disabled=false;if(drop)drop.classList.remove('drag');});
+    if(drop){drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');const file=e.dataTransfer.files[0];if(!file)return;if(file.size>12*1024*1024||!/\.(pdf|txt|md)$/i.test(file.name)){toast('Choose a PDF, TXT, or Markdown file under 12 MB.');return;}selectedFile=file;input.files=e.dataTransfer.files;name.textContent=`Selected: ${file.name} · ${(file.size/1024).toFixed(0)} KB`;process.disabled=false;});}
+  }
+  attachFileInput('dashboardFile','dashboardFileName','dashboardChoose','dashboardProcess','dashboardDrop');
+  attachFileInput('pdfFile','pdfFileName','pdfChoose','processPdf','pdfDrop');
+  async function readSelectedText(file){
+    if(!file)return '';
+    if(/\.(txt|md)$/i.test(file.name))return await file.text();
+    if(typeof pdfjsLib==='undefined')throw new Error('The PDF reader could not load. Check your internet connection and refresh.');
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;let out='';
+    for(let i=1;i<=pdf.numPages&&out.length<60000;i++){const pg=await pdf.getPage(i);const tc=await pg.getTextContent();out+=`\n[Page ${i}]\n`+tc.items.map(x=>x.str).join(' ');}
+    return out.trim();
+  }
+  async function summarizeFile(target){
+    if(!selectedFile){toast('Choose a file first.');return;}
+    if(!getKey()){toast('Add your Groq API key in Settings to summarize documents.');navigate('settings');return;}
+    const file=selectedFile,isDash=target==='dashboard',btn=$(isDash?'#dashboardProcess':'#processPdf'),label=btn.textContent;
+    btn.disabled=true;btn.textContent='Reading file…';
+    try{
+      const text=(await readSelectedText(file)).trim();
+      if(text.length<40)throw new Error('No readable text found. Scanned PDFs need OCR.');
+      btn.textContent='Summarizing with Groq…';
+      const mode=isDash?'Short Notes':$('#pdfOutputType').value,language=isDash?'English':$('#pdfLanguage').value,LIM=24000;
+      let content=await groq([{role:'system',content:'You are a careful study assistant. Use ONLY the document text provided and never invent facts. Write Markdown: # title, ## sections, - bullets, **bold** key terms. Leave a blank line after every heading and before every list.'},{role:'user',content:`Create "${mode}" from this document in ${language}.\n\nDOCUMENT (${file.name}):\n${text.slice(0,LIM)}`}],{max:3000,temp:0.3});
+      if(text.length>LIM)content+=`\n\n**Note:** only the first ${LIM.toLocaleString()} characters of this document were summarized.`;
+      content+=`\n\n## Source\n- Summarized by AI from your uploaded document: **${file.name}**. Check the summary against the original document.`;
+      const item=addHistory({title:file.name,type:'Summary',content,meta:{fileName:file.name,mode,language}});
+      $('#pdfOutput').innerHTML=renderOutput(item,'Summary');if(isDash)navigate('pdf');toast('Summary ready.');
+    }catch(e){toast(e.message||'Could not process the file.');}
+    btn.disabled=false;btn.textContent=label;
+  }
+  $('#dashboardProcess').addEventListener('click',()=>summarizeFile('dashboard'));
+  $('#processPdf').addEventListener('click',()=>summarizeFile('pdf'));
+
+  function renderFlash(){const card=activeFlashDeck[flashIndex];if(!card){$('#flashFront').textContent='No cards in this deck';$('#flashBack').textContent='Create a new deck to get started.';return;}$('#flashcard').classList.remove('flipped');$('#flashFront').textContent=card.front;$('#flashBack').textContent=card.back;$('#flashCounter').textContent=`Card ${flashIndex+1} of ${activeFlashDeck.length}`;$('#flashProgress').style.width=`${((flashIndex+1)/activeFlashDeck.length)*100}%`;$('#flashKnown').textContent=`${flashKnown.size} known · ${flashReview.size} to review`;$('#flashPrev').disabled=flashIndex===0;$('#flashNext').disabled=flashIndex===activeFlashDeck.length-1;}
+  function flipFlash(){ $('#flashcard').classList.toggle('flipped'); }
+  $('#flashcard').addEventListener('click',flipFlash);$('#flashcard').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flipFlash();}});
+  $('#flashPrev').addEventListener('click',()=>{if(flashIndex>0){flashIndex--;renderFlash();}});$('#flashNext').addEventListener('click',()=>{if(flashIndex<activeFlashDeck.length-1){flashIndex++;renderFlash();}});
+  $('#flashShuffle').addEventListener('click',()=>{for(let i=activeFlashDeck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[activeFlashDeck[i],activeFlashDeck[j]]=[activeFlashDeck[j],activeFlashDeck[i]];}flashIndex=0;renderFlash();toast('Deck shuffled.');});
+  $('#flashKnow').addEventListener('click',()=>{flashKnown.add(flashIndex);flashReview.delete(flashIndex);if(flashIndex<activeFlashDeck.length-1)flashIndex++;renderFlash();});
+  $('#flashReview').addEventListener('click',()=>{flashReview.add(flashIndex);flashKnown.delete(flashIndex);if(flashIndex<activeFlashDeck.length-1)flashIndex++;renderFlash();});
+  function openModal(title,body,confirmLabel,callback){$('#modalTitle').textContent=title;$('#modalBody').innerHTML=body;$('#modalConfirm').textContent=confirmLabel;modalCallback=callback;$('#modalBackdrop').classList.add('open');}
+  function closeModal(){$('#modalBackdrop').classList.remove('open');modalCallback=null;}
+  $('#modalClose').addEventListener('click',closeModal);$('#modalCancel').addEventListener('click',closeModal);$('#modalBackdrop').addEventListener('click',e=>{if(e.target===$('#modalBackdrop'))closeModal();});
+  $('#modalConfirm').addEventListener('click',()=>{if(modalCallback){const fn=modalCallback;closeModal();fn();}});
+  $('#newFlashDeck').addEventListener('click', () => {
+    openModal('Create a flashcard deck', `<div class="field"><label for="deckTopic">Topic</label><input class="control" id="deckTopic" placeholder="e.g. Java while loops"/></div><div class="field" style="margin-top:13px"><label for="deckTerms">Key concepts (one per line)</label><textarea class="control" id="deckTerms" rows="5" placeholder="while loop\nmodulo operator\nvariable"></textarea><span class="field-help">With a Groq key saved in Settings, AI writes the cards (the concept list is optional). Without a key, basic placeholder cards are made.</span></div>`, 'Create deck', async () => {
+      const topic = $('#deckTopic')?.value?.trim() || 'My study topic';
+      const terms = ($('#deckTerms')?.value || '').split('\n').map(x => x.trim()).filter(Boolean);
+      let deck = null;
+      if (getKey()) { toast('Generating flashcards with Groq…'); try { deck = await aiCards(topic, terms); } catch (e) { toast(e.message); return; } }
+      activeFlashDeck = deck || (terms.length ? terms.map(t => ({front: `What should you remember about ${t}?`, back: `Review the definition, purpose, and a practical example of ${t}. Add a specific explanation from your course notes.`})) : sampleCards.map(x => ({...x})));
+      flashIndex = 0;
+      flashKnown.clear();
+      flashReview.clear();
+      addHistory({title: 'Flashcards: ' + topic, type: 'Flashcards', content: `Deck on ${topic}`, cards: activeFlashDeck});
+      renderFlash();
+      navigate('flashcards');
+      toast('New deck created.');
+    });
+  });
+  $('#bookmarkDeck').addEventListener('click',()=>{const item={id:uid(),title:'Java & programming fundamentals',type:'Flashcards',content:'Interactive sample flashcard deck.',cards:activeFlashDeck};state.history.unshift({...item,createdAt:Date.now()});state.bookmarks.unshift({...item,sourceId:item.id,createdAt:Date.now()});persist();renderBookmarks();toast('Flashcard deck bookmarked.');});
+
+  function buildQuestions(topic){const lower=topic.toLowerCase();if(lower.includes('java')||lower.includes('program')||lower.includes('loop'))return sampleQuestions.slice(0,Number($('#quizCount')?.value||5)).map(q=>({...q,options:[...q.options]}));return [
+    {q:`Which is the best first step when studying ${topic}?`,options:['Memorize every sentence','Understand the core definition and purpose','Skip examples','Avoid practice questions'],answer:1,explanation:'Start by understanding the definition, purpose, and core idea before memorizing details.'},
+    {q:`How can you check your understanding of ${topic}?`,options:['Only reread the title','Avoid explaining it','Explain it in your own words and solve an example','Ignore mistakes'],answer:2,explanation:'Retrieval practice and a worked example reveal gaps in understanding.'},
+    {q:`What should good revision notes for ${topic} include?`,options:['Only decorative images','Key ideas, definitions, and examples','Unverified facts','Repeated filler'],answer:1,explanation:'Useful revision notes prioritize accurate concepts, definitions, and examples.'},
+    {q:`What should you do when a concept in ${topic} is unclear?`,options:['Check a reliable source and work through an example','Assume it is correct','Skip the entire subject','Copy without understanding'],answer:0,explanation:'Use a reliable source and a concrete example to resolve confusion.'},
+    {q:`Which approach supports long-term learning of ${topic}?`,options:['One rushed reading','Never test yourself','Regular retrieval practice and review','Only highlighting text'],answer:2,explanation:'Active recall and spaced review help strengthen learning.'}
+  ].slice(0,Number($('#quizCount')?.value||5));}
+  function startQuiz(topic,questions){quizState={topic,questions:questions.map(q=>({...q,options:[...q.options]})),index:0,answers:{},submitted:{},finished:false};renderQuiz();}
+  function renderQuiz(){const root=$('#quizArea');if(!quizState){root.innerHTML='';return;}const q=quizState.questions[quizState.index];if(!q){root.innerHTML='';return;}if(quizState.finished){const score=quizState.questions.reduce((n,q,i)=>n+(quizState.answers[i]===q.answer?1:0),0);root.innerHTML=`<div class="panel" style="margin-top:18px;text-align:center"><div class="eyebrow" style="justify-content:center">QUIZ COMPLETE</div><h2 style="font-size:28px;margin-bottom:7px">${score} / ${quizState.questions.length}</h2><p class="muted">${Math.round(score/quizState.questions.length*100)}% correct · ${escapeHtml(quizState.topic)}</p><div style="display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:18px"><button class="btn btn-primary" id="retryQuiz">Try again</button><button class="btn btn-ghost" id="saveQuiz">Save quiz result</button></div><div style="text-align:left;margin-top:25px">${quizState.questions.map((qq,i)=>`<div style="border-top:1px solid #263341;padding:13px 0"><strong style="font-size:12px">${i+1}. ${escapeHtml(qq.q)}</strong><p class="muted" style="margin:7px 0">Your answer: ${escapeHtml(qq.options[quizState.answers[i]]??'Not answered')} · Correct: ${escapeHtml(qq.options[qq.answer])}</p><p class="muted">${escapeHtml(qq.explanation)}</p></div>`).join('')}</div></div>`;$('#retryQuiz').addEventListener('click',()=>startQuiz(quizState.topic,quizState.questions));$('#saveQuiz').addEventListener('click',()=>{const content=quizState.questions.map((qq,i)=>`${i+1}. ${qq.q}\nYour answer: ${qq.options[quizState.answers[i]]??'Not answered'}\nCorrect answer: ${qq.options[qq.answer]}\nExplanation: ${qq.explanation}`).join('\n\n');addHistory({title:`Quiz: ${quizState.topic} · ${score}/${quizState.questions.length}`,type:'Quiz',content,questions:quizState.questions});toast('Quiz result saved to history.');});return;}
+    const chosen=quizState.answers[quizState.index];const submitted=quizState.submitted[quizState.index];root.innerHTML=`<div class="panel" style="margin-top:18px"><div class="panel-head"><span class="type-tag">QUESTION ${quizState.index+1} / ${quizState.questions.length}</span><span class="muted">${escapeHtml(quizState.topic)}</span></div><div class="progress-track"><span style="width:${(quizState.index+1)/quizState.questions.length*100}%"></span></div><h2 class="quiz-question">${escapeHtml(q.q)}</h2><div>${q.options.map((o,i)=>`<button class="option ${chosen===i?'selected':''} ${submitted&&i===q.answer?'correct':''} ${submitted&&chosen===i&&i!==q.answer?'wrong':''}" data-answer="${i}" ${submitted?'disabled':''}><span class="letter">${String.fromCharCode(65+i)}</span>${escapeHtml(o)}</button>`).join('')}</div>${submitted?`<div class="feedback ${chosen===q.answer?'good':'bad'}"><strong>${chosen===q.answer?'Correct!':'Not quite.'}</strong> ${escapeHtml(q.explanation)}</div>`:''}<div style="display:flex;justify-content:space-between;gap:10px;margin-top:18px"><button class="btn btn-ghost" id="quizPrev" ${quizState.index===0?'disabled':''}>← Previous</button><div style="display:flex;gap:8px">${!submitted?'<button class="btn btn-primary" id="checkAnswer">Check answer</button>':`<button class="btn btn-primary" id="quizNext">${quizState.index===quizState.questions.length-1?'See results':'Next question →'}</button>`}</div></div></div>`;
+    $$('[data-answer]',root).forEach(b=>b.addEventListener('click',()=>{if(quizState.submitted[quizState.index])return;quizState.answers[quizState.index]=Number(b.dataset.answer);renderQuiz();}));
+    $('#checkAnswer')?.addEventListener('click',()=>{if(quizState.answers[quizState.index]===undefined){toast('Select an answer first.');return;}quizState.submitted[quizState.index]=true;renderQuiz();});
+    $('#quizPrev')?.addEventListener('click',()=>{if(quizState.index>0){quizState.index--;renderQuiz();}});
+    $('#quizNext')?.addEventListener('click',()=>{if(quizState.index<quizState.questions.length-1){quizState.index++;renderQuiz();}else{quizState.finished=true;renderQuiz();}});
+  }
+  $('#sampleQuiz').addEventListener('click',()=>startQuiz('Java programming basics',sampleQuestions.slice(0,5)));
+  $('#generateQuiz').addEventListener('click',async()=>{const topic=$('#quizTopic').value.trim();if(!topic){toast('Enter a quiz topic.');return;}const btn=$('#generateQuiz');btn.disabled=true;btn.textContent='Generating…';try{const qs=await quizFor(topic);startQuiz(topic,qs);toast(getKey()?'Quiz generated with Groq.':'Sample quiz started. Add a Groq key in Settings for AI quizzes.');}catch(e){toast(e.message);}btn.disabled=false;btn.innerHTML='Generate quiz ↗';});
+  $('#clearHistory').addEventListener('click',()=>openModal('Clear study history?',`<p class="muted" style="line-height:1.8">This removes all history entries from this browser preview. Bookmarks are kept separately and will not be removed.</p>`,'Clear history',()=>{state.history=[];persist();renderHistory();renderRecent();toast('History cleared.');}));
+  // Subtle pointer-responsive card tilt. Disable it for touch and reduced-motion users.
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches && matchMedia('(hover: hover)').matches){
+    $$('.feature-card').forEach(card=>{card.addEventListener('pointermove',e=>{const r=card.getBoundingClientRect();const x=(e.clientX-r.left)/r.width-.5;const y=(e.clientY-r.top)/r.height-.5;card.style.transform=`perspective(700px) rotateX(${(-y*5).toFixed(2)}deg) rotateY(${(x*6).toFixed(2)}deg) translateY(-2px)`;});card.addEventListener('pointerleave',()=>card.style.transform='');});
+  }
+  function refreshApi(){const k=getKey(),on=!!k;$('#apiStatus').textContent=on?'Groq connected':'Demo mode active';$('.api-dot').style.cssText=on?'background:#3ddc97;box-shadow:0 0 10px #3ddc97':'';$('#settingsApiBadge').textContent=on?'CONNECTED':'NOT CONNECTED';$('#apiHint').textContent=on?'Key saved in this browser: '+k.slice(0,4)+'…'+k.slice(-4):'No key saved yet.';}
+  $('#groqModel').value=getModel();
+  $('#groqModel').addEventListener('change',e=>{try{localStorage.setItem(MODEL_STORE,e.target.value);}catch{}toast('Model updated.');});
+  $('#groqKeyToggle').addEventListener('click',()=>{const i=$('#groqKeyInput'),show=i.type==='password';i.type=show?'text':'password';$('#groqKeyToggle').textContent=show?'Hide':'Show';});
+  $('#groqKeySave').addEventListener('click',()=>{const v=$('#groqKeyInput').value.trim();if(!v){toast('Paste your Groq API key first.');return;}try{localStorage.setItem(KEY_STORE,v);}catch{toast('Could not save: browser storage is unavailable.');return;}$('#groqKeyInput').value='';refreshApi();loadModels(v);toast(v.startsWith('gsk_')?'Groq key saved in this browser.':'Saved, but Groq keys normally start with gsk_. Use Test connection to check it.');});
+  $('#groqKeyTest').addEventListener('click',async()=>{const key=$('#groqKeyInput').value.trim()||getKey();if(!key){toast('Paste or save a key first.');return;}const b=$('#groqKeyTest');b.disabled=true;b.textContent='Testing…';try{await groq([{role:'user',content:'Reply with the single word OK.'}],{max:5,temp:0,key});toast('Connection works. Your Groq key is valid.');loadModels(key);}catch(e){toast(e.message);}b.disabled=false;b.textContent='Test connection';});
+  $('#groqKeyClear').addEventListener('click',()=>{try{localStorage.removeItem(KEY_STORE);}catch{}$('#groqKeyInput').value='';refreshApi();toast('Groq key removed from this browser.');});
+  refreshApi();if(getKey())loadModels();
+  renderCounts();renderRecent();renderBookmarks();renderHistory();renderFlash();
+})();
+</script>
+</body>
+</html>
